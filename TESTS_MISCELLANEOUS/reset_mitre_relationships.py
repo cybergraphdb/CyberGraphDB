@@ -1,17 +1,20 @@
 from neo4j import GraphDatabase
+import logging
 
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Neo4jConnection:
     def __init__(self, uri, user, password):
         self._driver = GraphDatabase.driver(uri, auth=(user, password))
-        print("\n[!] Database Connection: SUCCESSFULL")
+        logging.info("Database connection: SUCCESSFUL")
 
     def close(self):
         self._driver.close()
 
     def rename_relationships(self):
         with self._driver.session() as session:
-            # Rinominare le relazioni tra Technique e Mitigation
+            # Rename relationships between Technique and Mitigation
             session.write_transaction(
                 self._rename_relationship,
                 "Technique",
@@ -19,7 +22,7 @@ class Neo4jConnection:
                 "HAS_TECHNIQUE",
                 "HAS_MITIGATION",
             )
-            # Rinominare le relazioni tra Technique e Detection
+            # Rename relationships between Technique and Detection
             session.write_transaction(
                 self._rename_relationship,
                 "Technique",
@@ -27,7 +30,7 @@ class Neo4jConnection:
                 "HAS_TECHNIQUE",
                 "HAS_DETECTION",
             )
-            # Rinominare le relazioni tra Technique e Procedure
+            # Rename relationships between Technique and Procedure
             session.write_transaction(
                 self._rename_relationship,
                 "Technique",
@@ -43,10 +46,11 @@ class Neo4jConnection:
         CALL apoc.refactor.rename.type(type(r), "{new_rel}") YIELD committedOperations
         RETURN committedOperations
         """
-        tx.run(query)
+        result = tx.run(query)
+        logging.info(f"Renamed relationships: {result.single()['committedOperations']}")
 
-
-# Esempio di utilizzo
-conn = Neo4jConnection("bolt://localhost:7688", "neo4j", "scottdirT98")
-conn.rename_relationships()
-conn.close()
+# Example usage
+if __name__ == "__main__":
+    conn = Neo4jConnection("bolt://localhost:7688", "neo4j", "")
+    conn.rename_relationships()
+    conn.close()

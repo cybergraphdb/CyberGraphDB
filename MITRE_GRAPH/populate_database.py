@@ -12,7 +12,7 @@ class Neo4jConnection:
         self._driver.close()
 
     def create_hash_node_from_report_file(self, MITRE_family):
-        path = "C:\\Users\\marco\\python_version\\Retrieve_HASH\\FILTER_TARGET_HASHES\\"
+        path = "MALWARE_GRAPH/"
         with open(path + str(MITRE_family), "r") as file:
             report_data = json.load(file)
 
@@ -273,7 +273,7 @@ class Neo4jConnection:
 # # Configura la connessione
 # uri = "bolt://localhost:7688"
 # user = "neo4j"
-# password = "scottdirT98"
+# password = ""
 
 # # Crea una connessione al database
 # conn = Neo4jConnection(uri, user, password)

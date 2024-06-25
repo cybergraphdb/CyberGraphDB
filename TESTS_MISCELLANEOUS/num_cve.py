@@ -4,7 +4,7 @@ import streamlit as st
 from py2neo import Graph
 
 # Connect to Neo4j
-graph = Graph("bolt://localhost:7688", auth=("neo4j", "scottdirT98"))
+graph = Graph("bolt://localhost:7688", auth=("neo4j", ""))
 
 
 # Function to measure the execution time of queries
@@ -16,23 +16,23 @@ def measure_query_time(query_function, *args):
     return execution_time, result
 
 
-# Define query to get the number of nodes, edges, and properties for the MITRE Graph
-def get_mitre_graph_info():
+# Define query to get the number of nodes, edges, and properties for the CVE Graph
+def get_cve_graph_info():
     query_nodes = """
     MATCH (n)
-    WHERE n:Malware OR n:Technique OR n:Procedure OR n:Mitigation OR n:Detection
+    WHERE n:CVE OR n:Product OR n:CVE_Description OR n:CVE_ProblemType OR n:CVE_Reference
     RETURN count(n) AS num_nodes
     """
 
     query_edges = """
     MATCH ()-[r]->()
-    WHERE type(r) IN ['HAS_TECHNIQUE', 'HAS_PROCEDURE', 'HAS_MITIGATION', 'HAS_DETECTION']
+    WHERE type(r) IN ['AFFECTS', 'DESCRIBED_BY', 'HAS_PROBLEM_TYPE', 'HAS_REFERENCE']
     RETURN count(r) AS num_edges
     """
 
     query_properties = """
     MATCH (n)
-    WHERE n:Malware OR n:Technique OR n:Procedure OR n:Mitigation OR n:Detection
+    WHERE n:CVE OR n:Product OR n:CVE_Description OR n:CVE_ProblemType OR n:CVE_Reference
     RETURN sum(size(keys(n))) AS num_properties
     """
 
@@ -43,11 +43,11 @@ def get_mitre_graph_info():
     return num_nodes, num_edges, num_properties
 
 
-# Get info for MITRE Graph
-num_nodes, num_edges, num_properties = get_mitre_graph_info()
+# Get info for CVE Graph
+num_nodes, num_edges, num_properties = get_cve_graph_info()
 
 # Streamlit UI
-st.title("MITRE Graph Information")
+st.title("CVE Graph Information")
 
 # Display the information
 st.write(f"Number of Nodes: {num_nodes}")
@@ -67,10 +67,10 @@ latex_table = f"""
         \\toprule
         \\textbf{{Graph}} & \\textbf{{Number of Nodes}} & \\textbf{{Number of Edges}} & \\textbf{{Total Number of Properties}} \\
         \\midrule
-        MITRE Graph & {num_nodes} & {num_edges} & {num_properties} \\
+        CVE Graph & {num_nodes} & {num_edges} & {num_properties} \\
         \\bottomrule
     \\end{{tabular}}
-    \\caption{{MITRE Graph Information}}
+    \\caption{{CVE Graph Information}}
     \\label{{tab:graph_info}}
 \\end{{table}}
 

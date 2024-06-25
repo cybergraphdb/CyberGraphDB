@@ -5,7 +5,7 @@ import streamlit as st
 from py2neo import Graph
 
 # Connect to Neo4j
-graph = Graph("bolt://localhost:7688", auth=("neo4j", "scottdirT98"))
+graph = Graph("bolt://localhost:7688", auth=("neo4j", ""))
 
 
 # Function to measure the execution time of queries
@@ -18,74 +18,74 @@ def measure_query_time(query_function, *args):
 
 
 # Define queries for different difficulty levels
-def get_cve_nodes():
+def get_malware_nodes():
     query = """
-    MATCH (c:CVE)
-    RETURN c.id
+    MATCH (m:Malware)
+    RETURN m.name, m.description
     """
     return graph.run(query).data()
 
 
-def get_product_nodes():
+def get_technique_nodes():
     query = """
-    MATCH (p:Product)
-    RETURN p.name, p.vendor, p.affected_versions
+    MATCH (t:Technique)
+    RETURN t.technique_id, t.name, t.description
     """
     return graph.run(query).data()
 
 
-def get_cve_description_nodes():
+def get_procedure_nodes():
     query = """
-    MATCH (d:CVE_Description)
-    RETURN d.language, d.text
+    MATCH (p:Procedure)
+    RETURN p.id, p.name, p.description
     """
     return graph.run(query).data()
 
 
-def get_cve_problem_type_nodes():
+def get_mitigation_nodes():
     query = """
-    MATCH (pt:CVE_ProblemType)
-    RETURN pt.cwe_id, pt.description
+    MATCH (m:Mitigation)
+    RETURN m.name, m.description
     """
     return graph.run(query).data()
 
 
-def get_cve_reference_nodes():
+def get_detection_nodes():
     query = """
-    MATCH (r:CVE_Reference)
-    RETURN r.url
+    MATCH (d:Detection)
+    RETURN d.name, d.description
     """
     return graph.run(query).data()
 
 
-def get_products_for_cve():
+def get_techniques_for_malware():
     query = """
-    MATCH (c:CVE)-[:AFFECTS]->(p:Product)
-    RETURN c.id, p.name, p.vendor, p.affected_versions
+    MATCH (m:Malware)-[:HAS_TECHNIQUE]->(t:Technique)
+    RETURN m.name, t.technique_id, t.name
     """
     return graph.run(query).data()
 
 
-def get_descriptions_for_cve():
+def get_procedures_for_techniques():
     query = """
-    MATCH (c:CVE)-[:DESCRIBED_BY]->(d:CVE_Description)
-    RETURN c.id, d.language, d.text
+    MATCH (t:Technique)-[:HAS_PROCEDURE]->(p:Procedure)
+    RETURN t.technique_id, t.name, p.id, p.name
     """
     return graph.run(query).data()
 
 
-def get_problem_types_for_cve():
+def get_mitigations_for_techniques():
     query = """
-    MATCH (c:CVE)-[:HAS_PROBLEM_TYPE]->(pt:CVE_ProblemType)
-    RETURN c.id, pt.cwe_id, pt.description
+    MATCH (t:Technique)-[:HAS_MITIGATION]->(m:Mitigation)
+    RETURN t.technique_id, t.name, m.name
     """
     return graph.run(query).data()
 
 
-def get_references_for_cve():
+def get_detections_for_techniques():
     query = """
-    MATCH (c:CVE)-[:HAS_REFERENCE]->(r:CVE_Reference)
-    RETURN c.id, r.url
+    MATCH (t:Technique)-[:HAS_DETECTION]->(d:Detection)
+    RETURN t.technique_id, t.name, d.name
     """
     return graph.run(query).data()
 
@@ -93,7 +93,7 @@ def get_references_for_cve():
 def get_all_relationships(limit=1000):
     query = """
     MATCH (a)-[r]->(b)
-    RETURN a.id, type(r) AS relationship_type, b.id
+    RETURN a.name, type(r), b.name
     LIMIT $limit
     """
     return graph.run(query, limit=limit).data()
@@ -102,17 +102,17 @@ def get_all_relationships(limit=1000):
 # Classify the queries
 query_classification = {
     "easy": [
-        get_cve_nodes,
-        get_product_nodes,
-        get_cve_description_nodes,
-        get_cve_problem_type_nodes,
-        get_cve_reference_nodes,
+        get_malware_nodes,
+        get_technique_nodes,
+        get_procedure_nodes,
+        get_mitigation_nodes,
+        get_detection_nodes,
     ],
     "medium": [
-        get_products_for_cve,
-        get_descriptions_for_cve,
-        get_problem_types_for_cve,
-        get_references_for_cve,
+        get_techniques_for_malware,
+        get_procedures_for_techniques,
+        get_mitigations_for_techniques,
+        get_detections_for_techniques,
     ],
     "hard": [get_all_relationships],
 }
@@ -136,7 +136,7 @@ average_medium = calculate_average(execution_times["medium"])
 average_hard = calculate_average(execution_times["hard"])
 
 # Streamlit UI
-st.title("CVE Graph Query Performance")
+st.title("MITRE Graph Query Performance")
 
 # Display the execution times in a bar chart
 st.subheader("Average Execution Times by Difficulty Level")
@@ -173,10 +173,10 @@ latex_table = f"""
         \\toprule
         \\textbf{{Graph}} & \\textbf{{Easy (seconds)}} & \\textbf{{Medium (seconds)}} & \\textbf{{Hard (seconds)}} \\
         \\midrule
-        CVE Graph & {average_easy:.2f} & {average_medium:.2f} & {average_hard:.2f} \\
+        Malware Graph & {average_easy:.2f} & {average_medium:.2f} & {average_hard:.2f} \\
         \\bottomrule
     \\end{{tabular}}
-    \\caption{{Average Execution Times by Difficulty Level for CVE Graph}}
+    \\caption{{Average Execution Times by Difficulty Level for Malware Graph}}
     \\label{{tab:execution_times}}
 \\end{{table}}
 

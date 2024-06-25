@@ -5,7 +5,7 @@ import streamlit as st
 from py2neo import Graph
 
 # Connect to Neo4j
-graph = Graph("bolt://localhost:7688", auth=("neo4j", "scottdirT98"))
+graph = Graph("bolt://localhost:7688", auth=("neo4j", ""))
 
 
 # Function to measure the execution time of queries
@@ -18,74 +18,82 @@ def measure_query_time(query_function, *args):
 
 
 # Define queries for different difficulty levels
-def get_malware_nodes():
+def get_metasploit_script_nodes():
     query = """
-    MATCH (m:Malware)
-    RETURN m.name, m.description
+    MATCH (m:MetasploitScript)
+    RETURN m.name, m.type, m.target
     """
     return graph.run(query).data()
 
 
-def get_technique_nodes():
+def get_metasploit_description_nodes():
     query = """
-    MATCH (t:Technique)
-    RETURN t.technique_id, t.name, t.description
+    MATCH (d:MetasploitDescription)
+    RETURN d.description
     """
     return graph.run(query).data()
 
 
-def get_procedure_nodes():
+def get_payload_nodes():
     query = """
-    MATCH (p:Procedure)
-    RETURN p.id, p.name, p.description
+    MATCH (p:Payload)
+    RETURN p.details
     """
     return graph.run(query).data()
 
 
-def get_mitigation_nodes():
+def get_code_nodes():
     query = """
-    MATCH (m:Mitigation)
-    RETURN m.name, m.description
+    MATCH (c:Code)
+    RETURN c.code
     """
     return graph.run(query).data()
 
 
-def get_detection_nodes():
+def get_author_nodes():
     query = """
-    MATCH (d:Detection)
-    RETURN d.name, d.description
+    MATCH (a:Author)
+    RETURN a.name
     """
     return graph.run(query).data()
 
 
-def get_techniques_for_malware():
+def get_references_nodes():
     query = """
-    MATCH (m:Malware)-[:HAS_TECHNIQUE]->(t:Technique)
-    RETURN m.name, t.technique_id, t.name
+    MATCH (r:References)
+    RETURN r.reference
     """
     return graph.run(query).data()
 
 
-def get_procedures_for_techniques():
+def get_descriptions_for_scripts():
     query = """
-    MATCH (t:Technique)-[:HAS_PROCEDURE]->(p:Procedure)
-    RETURN t.technique_id, t.name, p.id, p.name
+    MATCH (m:MetasploitScript)-[:HAS_DESCRIPTION]->(d:MetasploitDescription)
+    RETURN m.name, d.description
     """
     return graph.run(query).data()
 
 
-def get_mitigations_for_techniques():
+def get_payloads_for_scripts():
     query = """
-    MATCH (t:Technique)-[:HAS_MITIGATION]->(m:Mitigation)
-    RETURN t.technique_id, t.name, m.name
+    MATCH (m:MetasploitScript)-[:HAS_PAYLOAD]->(p:Payload)
+    RETURN m.name, p.details
     """
     return graph.run(query).data()
 
 
-def get_detections_for_techniques():
+def get_codes_for_scripts():
     query = """
-    MATCH (t:Technique)-[:HAS_DETECTION]->(d:Detection)
-    RETURN t.technique_id, t.name, d.name
+    MATCH (m:MetasploitScript)-[:HAS_CODE]->(c:Code)
+    RETURN m.name, c.code
+    """
+    return graph.run(query).data()
+
+
+def get_authors_for_scripts():
+    query = """
+    MATCH (m:MetasploitScript)-[:CREATED]->(a:Author)
+    RETURN m.name, a.name
     """
     return graph.run(query).data()
 
@@ -93,7 +101,7 @@ def get_detections_for_techniques():
 def get_all_relationships(limit=1000):
     query = """
     MATCH (a)-[r]->(b)
-    RETURN a.name, type(r), b.name
+    RETURN a.name, type(r) AS relationship_type, b.name
     LIMIT $limit
     """
     return graph.run(query, limit=limit).data()
@@ -102,17 +110,18 @@ def get_all_relationships(limit=1000):
 # Classify the queries
 query_classification = {
     "easy": [
-        get_malware_nodes,
-        get_technique_nodes,
-        get_procedure_nodes,
-        get_mitigation_nodes,
-        get_detection_nodes,
+        get_metasploit_script_nodes,
+        get_metasploit_description_nodes,
+        get_payload_nodes,
+        get_code_nodes,
+        get_author_nodes,
     ],
     "medium": [
-        get_techniques_for_malware,
-        get_procedures_for_techniques,
-        get_mitigations_for_techniques,
-        get_detections_for_techniques,
+        get_descriptions_for_scripts,
+        get_payloads_for_scripts,
+        get_codes_for_scripts,
+        get_authors_for_scripts,
+        get_references_nodes,
     ],
     "hard": [get_all_relationships],
 }
@@ -136,7 +145,7 @@ average_medium = calculate_average(execution_times["medium"])
 average_hard = calculate_average(execution_times["hard"])
 
 # Streamlit UI
-st.title("MITRE Graph Query Performance")
+st.title("Exploit Graph Query Performance")
 
 # Display the execution times in a bar chart
 st.subheader("Average Execution Times by Difficulty Level")
@@ -173,10 +182,10 @@ latex_table = f"""
         \\toprule
         \\textbf{{Graph}} & \\textbf{{Easy (seconds)}} & \\textbf{{Medium (seconds)}} & \\textbf{{Hard (seconds)}} \\
         \\midrule
-        Malware Graph & {average_easy:.2f} & {average_medium:.2f} & {average_hard:.2f} \\
+        Exploit Graph & {average_easy:.2f} & {average_medium:.2f} & {average_hard:.2f} \\
         \\bottomrule
     \\end{{tabular}}
-    \\caption{{Average Execution Times by Difficulty Level for Malware Graph}}
+    \\caption{{Average Execution Times by Difficulty Level for Exploit Graph}}
     \\label{{tab:execution_times}}
 \\end{{table}}
 
