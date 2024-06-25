@@ -1,18 +1,18 @@
 import requests
 from bs4 import BeautifulSoup
-import populate_database
+
 
 def extract_detection_table(soup, neo4j_conn, technique_name):
     # Trova le tabelle che seguono l'elemento <h2>
     table_selector = "table.datasources-table tbody tr"
     table_rows = soup.select(table_selector)
-    
+
     if not table_rows:
         print("Table not found")
         return
-    
+
     print("\n[!] Detection Used by Technique: \n")
-    
+
     prev_data_source = "N/A"
     prev_data_component = "N/A"
     prev_detects = "N/A"
@@ -20,11 +20,19 @@ def extract_detection_table(soup, neo4j_conn, technique_name):
     for row in table_rows:
         data_source_elements = row.select("td:nth-child(2) a")
         data_source_element = data_source_elements[0] if data_source_elements else None
-        data_source = data_source_element.get_text() if data_source_element else prev_data_source
+        data_source = (
+            data_source_element.get_text() if data_source_element else prev_data_source
+        )
 
         data_component_elements = row.select("td:nth-child(3) a")
-        data_component_element = data_component_elements[0] if data_component_elements else None
-        data_component = data_component_element.get_text() if data_component_element else prev_data_component
+        data_component_element = (
+            data_component_elements[0] if data_component_elements else None
+        )
+        data_component = (
+            data_component_element.get_text()
+            if data_component_element
+            else prev_data_component
+        )
 
         detects_elements = row.select("td:nth-child(4) p")
         detects_element = detects_elements[0] if detects_elements else None
@@ -41,8 +49,6 @@ def extract_detection_table(soup, neo4j_conn, technique_name):
 
         neo4j_conn.create_detection_node(data_source, data_component, detects)
         neo4j_conn.create_relationship_technique_detection(technique_name, data_source)
-
-
 
 
 def scrape_procedure_table(soup):
@@ -74,12 +80,11 @@ def scrape_procedure_table(soup):
         procedure_data = {
             "ID": procedure_id,
             "procedure": procedure_name,
-            "Description": procedure_description
+            "Description": procedure_description,
         }
         procedures.append(procedure_data)
 
     return procedures
-
 
 
 def scrape_mitigation_table(soup, neo4j_conn, technique_name):
@@ -89,7 +94,9 @@ def scrape_mitigation_table(soup, neo4j_conn, technique_name):
     # Verifica se l'header delle mitigations è stato trovato
     if mitigations_header:
         # Trova la tabella successiva all'header
-        table = mitigations_header.find_next("table", class_="table table-bordered table-alternate mt-2")
+        table = mitigations_header.find_next(
+            "table", class_="table table-bordered table-alternate mt-2"
+        )
         if table:
             # Inizializza una lista per memorizzare i dati delle mitigations
             mitigations = []
@@ -115,16 +122,22 @@ def scrape_mitigation_table(soup, neo4j_conn, technique_name):
                 mitigation_data = {
                     "ID": mitigation_id,
                     "Mitigation": mitigation_name,
-                    "Description": mitigation_description
+                    "Description": mitigation_description,
                 }
                 mitigations.append(mitigation_data)
             for mitigation in mitigations:
-                    print("ID:", mitigation["ID"])
-                    print("Mitigation:", mitigation["Mitigation"])
-                    print("Description:", mitigation["Description"])
-                    print()
-                    neo4j_conn.create_mitigation_node(mitigation["ID"], mitigation["Mitigation"], mitigation["Description"])
-                    neo4j_conn.create_relationship_technique_mitigation(technique_name, mitigation["Mitigation"])
+                print("ID:", mitigation["ID"])
+                print("Mitigation:", mitigation["Mitigation"])
+                print("Description:", mitigation["Description"])
+                print()
+                neo4j_conn.create_mitigation_node(
+                    mitigation["ID"],
+                    mitigation["Mitigation"],
+                    mitigation["Description"],
+                )
+                neo4j_conn.create_relationship_technique_mitigation(
+                    technique_name, mitigation["Mitigation"]
+                )
 
             else:
                 print("No Mitigation Found")
@@ -134,17 +147,16 @@ def scrape_mitigation_table(soup, neo4j_conn, technique_name):
         return []
 
 
-
 # def explore_technique_url(neo4j_conn, malware_name, technique_type, technique_name, technique_id, technique_url, technique_use, span_href):
 #     try:
 #         response = requests.get(technique_url)
 #         response.raise_for_status()
 #         body = response.text
-        
+
 #         soup = BeautifulSoup(body, "html.parser")
-        
+
 #         description_element = soup.select_one(".description-body")
-       
+
 #         if description_element:
 #             technique_description = description_element.get_text().strip()
 #             print("Technique Description:\n", technique_description)
@@ -152,10 +164,10 @@ def scrape_mitigation_table(soup, neo4j_conn, technique_name):
 #             neo4j_conn.create_relationship_malware_technique(malware_name, technique_name)
 #         else:
 #             print("Description not found")
-        
+
 #         extract_detection_table(soup, neo4j_conn, technique_name)
 #         procedures_data = scrape_procedure_table(soup)
-        
+
 #         print("\n[!] Technique Procedures\n")
 
 #         for procedure in procedures_data:
@@ -169,30 +181,49 @@ def scrape_mitigation_table(soup, neo4j_conn, technique_name):
 #         print("\n[!] Technique Mitigations \n")
 
 #         scrape_mitigation_table(soup, neo4j_conn, technique_name)
-    
+
+
 #     except requests.exceptions.RequestException as e:
 #         print("Could not load URL:", e)
-def explore_technique_url(neo4j_conn, malware_name, technique_type, technique_name, technique_id, technique_url, technique_use, span_href):
+def explore_technique_url(
+    neo4j_conn,
+    malware_name,
+    technique_type,
+    technique_name,
+    technique_id,
+    technique_url,
+    technique_use,
+    span_href,
+):
     try:
         response = requests.get(technique_url)
         response.raise_for_status()
         body = response.text
-        
+
         soup = BeautifulSoup(body, "html.parser")
-        
+
         description_element = soup.select_one(".description-body")
-       
+
         if description_element:
             technique_description = description_element.get_text().strip()
             print("Technique Description:\n", technique_description)
-            neo4j_conn.create_technique_node(technique_type, technique_name, technique_id, technique_url, span_href, technique_description)
-            neo4j_conn.create_relationship_malware_technique(malware_name, technique_name, technique_use)
+            neo4j_conn.create_technique_node(
+                technique_type,
+                technique_name,
+                technique_id,
+                technique_url,
+                span_href,
+                technique_description,
+            )
+            neo4j_conn.create_relationship_malware_technique(
+                malware_name, technique_name, technique_use
+            )
         else:
             print("Description not found")
-        
+
         extract_detection_table(soup, neo4j_conn, technique_name)
         procedures_data = scrape_procedure_table(soup)
-        
+
         print("\n[!] Technique Procedures\n")
 
         for procedure in procedures_data:
@@ -200,13 +231,16 @@ def explore_technique_url(neo4j_conn, malware_name, technique_type, technique_na
             print("Procedure:", procedure["procedure"])
             print("Description:", procedure["Description"])
             print()
-            neo4j_conn.create_procedure_node(procedure["ID"], procedure["procedure"], procedure["Description"])
-            neo4j_conn.create_relationship_technique_procedure(technique_name, procedure["procedure"])
+            neo4j_conn.create_procedure_node(
+                procedure["ID"], procedure["procedure"], procedure["Description"]
+            )
+            neo4j_conn.create_relationship_technique_procedure(
+                technique_name, procedure["procedure"]
+            )
 
         print("\n[!] Technique Mitigations \n")
 
         scrape_mitigation_table(soup, neo4j_conn, technique_name)
-    
+
     except requests.exceptions.RequestException as e:
         print("Could not load URL:", e)
-

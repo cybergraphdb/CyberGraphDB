@@ -1,5 +1,6 @@
 from neo4j import GraphDatabase
 
+
 class Neo4jConnection:
     def __init__(self, uri, user, password):
         self._driver = GraphDatabase.driver(uri, auth=(user, password))
@@ -11,6 +12,7 @@ class Neo4jConnection:
         with self._driver.session() as session:
             result = session.run("SHOW DATABASES")
             return [record["name"] for record in result]
+
 
 # Configura i dettagli di connessione
 neo4j_uri = "bolt://localhost:7688"

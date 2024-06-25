@@ -1,5 +1,6 @@
 from neo4j import GraphDatabase
 
+
 class Neo4jConnection:
     def __init__(self, uri, user, password):
         self._driver = GraphDatabase.driver(uri, auth=(user, password))
@@ -20,6 +21,7 @@ class Neo4jConnection:
         DETACH DELETE n
         """
         tx.run(query)
+
 
 # Configura la connessione
 uri = "bolt://localhost:7688"

@@ -1,10 +1,12 @@
+import mitre_scraper
 import requests
 from bs4 import BeautifulSoup
-import mitre_scraper
-from tqdm import tqdm 
+from tqdm import tqdm
+
 db = "None"
 # URL della pagina principale da cui iniziare la ricerca
-main_url = "https://attack.mitre.org/software/" #"https://attack.mitre.org/software/"
+main_url = "https://attack.mitre.org/software/"  # "https://attack.mitre.org/software/"
+
 
 def extract_malware_names():
     from py2neo import Graph
@@ -23,9 +25,10 @@ def extract_malware_names():
     malware_names = [record["name"] for record in graph.run(query)]
     for name in malware_names:
         print(f"- Malware {name} already in the Database ...")
-    
+
     print(f"Total Malware inside so far -> {len(malware_names)}")
     return malware_names
+
 
 def define_DB_Building():
     global db
@@ -38,9 +41,10 @@ def define_DB_Building():
         print("[!!!] Building Document Database ...\n")
     return db
 
+
 try:
     malware_names = extract_malware_names()
-    print(f"[+] Malware Names Extracted.")
+    print("[+] Malware Names Extracted.")
     response = requests.get(main_url)
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
@@ -62,16 +66,18 @@ try:
     # # Debug: stampa i link trovati
     # print(f"Trovati {len(sidenav_links)} link nel sidenav")
 
-
     # Estrai gli href dai link
-    #hrefs = [link['href'] for link in sidenav_links]
+    # hrefs = [link['href'] for link in sidenav_links]
 
     # Estrai gli href e il testo dai link
-    links_info = list(set(
-        (link['href'], link.get_text(strip=True)) 
-        for link in href_elements 
-        if "S0" not in link.get_text(strip=True) and "S1" not in link.get_text(strip=True)
-    ))
+    links_info = list(
+        set(
+            (link["href"], link.get_text(strip=True))
+            for link in href_elements
+            if "S0" not in link.get_text(strip=True)
+            and "S1" not in link.get_text(strip=True)
+        )
+    )
     print(links_info)
     # Stampa le informazioni dei link
     hrefs = []
@@ -86,7 +92,7 @@ try:
     for malware in to_do:
         print(malware)
     print(f"Total amount of Malware to add: {len(to_do)}")
-    #print(len(hrefs))
+    # print(len(hrefs))
     assert len(to_do) == len(hrefs), "Problems ..."
     access = 1
     # Stampa gli href
@@ -94,16 +100,16 @@ try:
     with open("REMAINING_MALWARES.txt", "+a") as f:
         for ref in hrefs:
             print(f"\nSaving {ref}")
-            f.write(f'{ref}\n')
+            f.write(f"{ref}\n")
     db = "Graph"
     for href in tqdm(hrefs):
         if access == 1:
             if "/software/S" in href:
-                complete_url =  main_url.replace("/software/", "") + href
+                complete_url = main_url.replace("/software/", "") + href
                 print("[!] Analyzing : ", complete_url)
                 mitre_scraper.scraper(complete_url, db)
         else:
             access = 1
-        
+
 except requests.exceptions.RequestException as e:
     print(f"Could not load URL {main_url}: {e}")

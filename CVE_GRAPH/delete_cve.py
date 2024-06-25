@@ -8,8 +8,8 @@ delete_cve_query = """
 MATCH (c:CVE)-[r]->(n)
 DETACH DELETE c, r, n
 """
-#-[r]->(n)
-#, r, n
+# -[r]->(n)
+# , r, n
 delete_cve = """
 MATCH (c:CVE)
 DETACH DELETE c
@@ -23,4 +23,6 @@ graph.run(delete_cve_query)
 graph.run(delete_cve)
 
 
-print("Tutti i nodi e le relazioni associati ai CVE sono stati cancellati dal database Neo4j.")
+print(
+    "Tutti i nodi e le relazioni associati ai CVE sono stati cancellati dal database Neo4j."
+)
