@@ -33,7 +33,7 @@ To install CyberGraphDB, clone the repository and navigate to the project direct
 ```bash
 git clone https://github.com/cybergraphdb/CyberGraphDB.git
 cd CyberGraphDB
-
+```
 ## Architecture
 
 CyberGraphDB is composed of four interconnected graphs, each representing different aspects of cybersecurity data:
@@ -52,12 +52,16 @@ Here are some example queries to interact with CyberGraphDB:
 ```cypher
 MATCH (m:Malware)
 RETURN m.name
+```
 
+```cypher
 MATCH (m:Malware)-[:EXPLOITS]->(c:CVE)
 WHERE m.name = 'SomeMalware'
 RETURN c.cve_id, c.description
+```
 
+```cypher
 MATCH (c:CVE)-[:HAS_EXPLOIT]->(e:Exploit)
 WHERE c.cve_id = 'CVE-2023-1234'
 RETURN e.name, e.description
-
+```
