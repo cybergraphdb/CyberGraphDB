@@ -6,7 +6,7 @@ CyberGraphDB is a graph database specifically designed for holistic cybersecurit
 
 **Click on this Link to access CyberGraphDB in .csv and .gml** 
 
-https://drive.google.com/drive/folders/19oRefos2PZSp9TvX28DvRxdVOfLQz2Xm?q=sharedwith:public%20parent:19oRefos2PZSp9TvX28DvRxdVOfLQz2Xm
+https://drive.google.com/drive/folders/19oRefos2PZSp9TvX28DvRxdVOfLQz2Xm
 
 
 ## Table of Contents
