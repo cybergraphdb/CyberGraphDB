@@ -2,6 +2,13 @@
 
 CyberGraphDB is a graph database specifically designed for holistic cybersecurity threat analysis. By integrating malware data, CVE vulnerabilities, and Metasploit exploits into a unified graph structure, CyberGraphDB provides a comprehensive view of the cybersecurity landscape. This integration enhances the correlation of disparate data points and improves threat understanding and prediction.
 
+## Access to the Database:
+
+**Click on this Link to access CyberGraphDB in .csv and .gml** 
+
+https://drive.google.com/drive/folders/19oRefos2PZSp9TvX28DvRxdVOfLQz2Xm?q=sharedwith:public%20parent:19oRefos2PZSp9TvX28DvRxdVOfLQz2Xm
+
+
 ## Table of Contents
 
 - [Introduction](#introduction)
